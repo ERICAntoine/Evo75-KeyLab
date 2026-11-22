@@ -1,0 +1,42 @@
+name: Publier KeyLab v0.2.0
+on:
+  push:
+    branches: [publication/v0.2.0]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ERICAntoine/Evo75-KeyLab
+    steps:
+      - name: Publier les fichiers Windows validés
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=51350744431488a31f2ffa1ffcafc162ec2a7e56
+          run=45045406647
+          test "$(gh run view "$run" --json headSha --jq .headSha)" = "$sha"
+          test "$(gh run view "$run" --json conclusion --jq .conclusion)" = success
+          gh run download "$run" -n evo75-keylab-windows-x64 -D dist
+          gh run download "$run" -n apercu-keylab -D dist
+          cd dist
+          sha256sum evo75-keylab.exe > SHA256SUMS.txt
+          cat > "$RUNNER_TEMP/release.md" <<'NOTES'
+          ## Ouvrir KeyLab
+          
+          Téléchargez **evo75-keylab.exe** ci-dessous et double-cliquez dessus sous Windows x64. La fenêtre utilise Microsoft Edge WebView2. Le fichier **keylab.png** montre l’interface.
+          
+          ## Dans cette version
+          
+          - Aperçu du clavier avec réglages indépendants pour les touches et le bandeau.
+          - Trois profils locaux avec sauvegarde automatique.
+          - Diagnostic HID du récepteur Evo75 2,4 GHz et accès au configurateur Ticktype.
+          
+          Les couleurs et les effets des profils s’appliquent à l’aperçu local. Pour régler les LED physiques, utilisez les raccourcis affichés ou le configurateur du fabricant.
+          
+          [Compilation et tests Windows](https://github.com/ERICAntoine/Evo75-KeyLab/actions/runs/45045406647)
+          NOTES
+          gh release create v0.2.0 --target "$sha" --title "Evo75 KeyLab v0.2.0" --notes-file "$RUNNER_TEMP/release.md" evo75-keylab.exe keylab.png SHA256SUMS.txt
