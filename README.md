@@ -4,7 +4,7 @@ Prototype Windows en Rust pour identifier les interfaces HID du récepteur **EVO
 
 ## Lancer le diagnostic sous Windows
 
-Dans [GitHub Actions](../../actions/workflows/windows.yml), ouvre une compilation réussie et télécharge l’archive `evo75-keylab-windows-x64` dans la section **Artifacts**. Extrais-la, ouvre PowerShell dans le dossier de l’exécutable et lance :
+Dans [GitHub Actions](https://github.com/ERICAntoine/Evo75-KeyLab/actions/workflows/windows.yml), ouvre une compilation réussie et télécharge l’archive `evo75-keylab-windows-x64` dans la section **Artifacts**. Extrais le ZIP, puis double-clique sur `evo75-keylab.exe`. La fenêtre affiche le résultat ou l’erreur et attend que tu appuies sur **Entrée**. Tu peux aussi lancer le diagnostic depuis PowerShell.
 
 ```powershell
 .\evo75-keylab.exe

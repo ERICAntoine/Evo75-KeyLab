@@ -2,7 +2,28 @@
 compile_error!("Evo75-KeyLab cible Windows.");
 
 #[cfg(windows)]
-fn main() -> Result<(), hidapi::HidError> {
+fn main() -> std::process::ExitCode {
+    use std::io::{self, IsTerminal};
+    use std::process::ExitCode;
+
+    let status = match run_diagnostic() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("Le diagnostic HID a échoué : {error}");
+            ExitCode::FAILURE
+        }
+    };
+
+    if io::stdin().is_terminal() && io::stdout().is_terminal() {
+        println!("\nAppuie sur Entrée pour fermer.");
+        let _ = io::stdin().read_line(&mut String::new());
+    }
+
+    status
+}
+
+#[cfg(windows)]
+fn run_diagnostic() -> Result<(), hidapi::HidError> {
     use hidapi::HidApi;
 
     const RECEIVER: (u16, u16) = (0x36B0, 0x3002);
