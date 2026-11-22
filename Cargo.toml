@@ -1,0 +1,9 @@
+[package]
+name = "evo75-keylab"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Diagnostic HID du récepteur EVO75 2.4G sous Windows"
+
+[target.'cfg(windows)'.dependencies]
+hidapi = { version = "2.6", default-features = false, features = ["windows-native"] }

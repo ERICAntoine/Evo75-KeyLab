@@ -1,0 +1,23 @@
+name: Compilation Windows
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier le format
+        run: cargo fmt --check
+      - name: Compiler pour Windows x64
+        run: cargo build --release
+      - name: Lancer le diagnostic
+        run: .\target\release\evo75-keylab.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evo75-keylab-windows-x64
+          path: target/release/evo75-keylab.exe
+          if-no-files-found: error
