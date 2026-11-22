@@ -1,5 +1,55 @@
 use hidapi::{HidApi, HidDevice};
+use hidparser::{Report, parse_report_descriptor};
 use std::sync::Mutex;
+
+#[derive(Clone, Copy)]
+struct ReportIds {
+    input: u8,
+    output: u8,
+}
+
+fn describe(reports: &[Report]) -> String {
+    if reports.is_empty() {
+        return "aucun".into();
+    }
+    reports
+        .iter()
+        .map(|r| {
+            let id = r.report_id.map(u32::from).unwrap_or(0);
+            format!("ID {id} / {} bits", r.size_in_bits)
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn via_id(reports: &[Report]) -> Option<u8> {
+    let [report] = reports else { return None };
+    if report.size_in_bits != 256 {
+        return None;
+    }
+    u8::try_from(report.report_id.map(u32::from).unwrap_or(0)).ok()
+}
+
+fn inspect(device: &HidDevice) -> Result<(ReportIds, String), String> {
+    let mut raw = vec![0; hidapi::MAX_REPORT_DESCRIPTOR_SIZE];
+    let len = device
+        .get_report_descriptor(&mut raw)
+        .map_err(|e| format!("Lecture du descripteur HID : {e}"))?;
+    let d = parse_report_descriptor(&raw[..len])
+        .map_err(|e| format!("Analyse du descripteur HID : {e:?}"))?;
+    let summary = format!(
+        "Entrée : {} · Sortie : {} · Feature : {}",
+        describe(&d.input_reports),
+        describe(&d.output_reports),
+        describe(&d.features)
+    );
+    if d.bad_input_reports.is_empty() && d.bad_output_reports.is_empty() {
+        if let (Some(input), Some(output)) = (via_id(&d.input_reports), via_id(&d.output_reports)) {
+            return Ok((ReportIds { input, output }, summary));
+        }
+    }
+    Err(format!("Format VIA 32 octets non confirmé. {summary}"))
+}
 
 static TRANSACTION: Mutex<()> = Mutex::new(());
 const GET_VERSION: u8 = 1;
@@ -14,8 +64,14 @@ enum Output {
     Control,
 }
 
-fn exchange(device: &HidDevice, output: Output, command: &[u8]) -> Result<[u8; 32], String> {
+fn exchange(
+    device: &HidDevice,
+    output: Output,
+    ids: ReportIds,
+    command: &[u8],
+) -> Result<[u8; 32], String> {
     let mut packet = [0; 33];
+    packet[0] = ids.output;
     packet[1..1 + command.len()].copy_from_slice(command);
     let id = command[0];
     match output {
@@ -31,15 +87,21 @@ fn exchange(device: &HidDevice, output: Output, command: &[u8]) -> Result<[u8; 3
             .send_output_report(&packet)
             .map_err(|e| format!("Envoi contrôle 0x{id:02X} : {e}"))?,
     }
-    let mut reply = [0; 32];
+    let mut raw = [0; 33];
     let count = device
-        .read_timeout(&mut reply, 1500)
+        .read_timeout(&mut raw, 1500)
         .map_err(|e| format!("Lecture après 0x{id:02X} : {e}"))?;
     if count == 0 {
         return Err(format!("Aucune réponse à 0x{id:02X} sous 1,5 s."));
     }
+    let offset = usize::from(ids.input != 0);
+    if count != 32 + offset || (offset == 1 && raw[0] != ids.input) {
+        return Err(format!("Rapport entrant inattendu ({count} octets)."));
+    }
+    let mut reply = [0; 32];
+    reply.copy_from_slice(&raw[offset..count]);
     let header_len = if command[0] == GET_VERSION { 1 } else { 3 };
-    if count != reply.len() || reply[..header_len] != command[..header_len] {
+    if reply[..header_len] != command[..header_len] {
         return Err(format!(
             "Réponse inattendue ({} octets, commande 0x{:02X}).",
             count, reply[0]
@@ -48,10 +110,10 @@ fn exchange(device: &HidDevice, output: Output, command: &[u8]) -> Result<[u8; 3
     Ok(reply)
 }
 
-fn read_color(device: &HidDevice, output: Output) -> Result<[u8; 2], String> {
+fn read_color(device: &HidDevice, output: Output, ids: ReportIds) -> Result<[u8; 2], String> {
     // Two different padding values distinguish returned data from a request echo.
-    let first = exchange(device, output, &[GET, MATRIX, COLOR, 0, 0])?;
-    let second = exchange(device, output, &[GET, MATRIX, COLOR, 255, 255])?;
+    let first = exchange(device, output, ids, &[GET, MATRIX, COLOR, 0, 0])?;
+    let second = exchange(device, output, ids, &[GET, MATRIX, COLOR, 255, 255])?;
     if first[3..5] != second[3..5] {
         return Err("Lecture de teinte non confirmée par le récepteur.".into());
     }
@@ -79,13 +141,14 @@ pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
             .map_err(|e| format!("Ouverture HID : {e}"))
     };
     let device = open()?;
-    let (device, output, answer) = match exchange(&device, Output::Interrupt, &[GET_VERSION]) {
+    let (ids, summary) = inspect(&device)?;
+    let (device, output, answer) = match exchange(&device, Output::Interrupt, ids, &[GET_VERSION]) {
         Ok(answer) => (device, Output::Interrupt, answer),
         Err(first) => {
             drop(device);
             let device = open()?;
-            let answer = exchange(&device, Output::Control, &[GET_VERSION]).map_err(|second| {
-                format!("Essai interrupt : {first} · Essai contrôle : {second}")
+            let answer = exchange(&device, Output::Control, ids, &[GET_VERSION]).map_err(|second| {
+                format!("{summary} · Essai interrupt : {first} · Essai contrôle : {second}")
             })?;
             (device, Output::Control, answer)
         }
@@ -96,10 +159,10 @@ pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
             "Version reçue : 0x{version:04X}. Commandes couleur non activées."
         ));
     }
-    let current = read_color(&device, output).map_err(|e| format!("VIA {version} répond. {e}"))?;
+    let current = read_color(&device, output, ids).map_err(|e| format!("VIA {version} répond. {e}"))?;
     if let Some([hue, sat]) = color {
-        exchange(&device, output, &[SET, MATRIX, COLOR, hue, sat])?;
-        if read_color(&device, output)? != [hue, sat] {
+        exchange(&device, output, ids, &[SET, MATRIX, COLOR, hue, sat])?;
+        if read_color(&device, output, ids)? != [hue, sat] {
             return Err("Commande envoyée, mais la relecture de la teinte diffère.".into());
         }
         Ok(format!("VIA {version} · Teinte confirmée par relecture."))

@@ -1,6 +1,6 @@
 [package]
 name = "evo75-keylab"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 default-run = "evo75-keylab"
 license = "MIT"
@@ -10,7 +10,8 @@ description = "Atelier d’éclairage et diagnostic HID pour l’Evo75 sous Wind
 tauri-build = "2"
 
 [dependencies]
-hidapi = { version = "2.6", default-features = false, features = ["windows-native"] }
+hidapi = { version = "2.6", default-features = false }
+hidparser = "1.0.4"
 open = "5"
 serde = { version = "1", features = ["derive"] }
 tauri = { version = "2", features = ["custom-protocol"] }
