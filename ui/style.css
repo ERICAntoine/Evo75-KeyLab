@@ -1,0 +1,94 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  background: #0b121a; color: #eaf1f2;
+  --mint: #8ce4c6; --muted: #acbcc4; --line: #2d414b;
+  --key-color: #91ecd8; --strip-color: #cab5ff;
+}
+* { box-sizing: border-box }
+body { margin: 0; min-height: 100vh; display: grid; grid-template-columns: 182px minmax(0, 1fr); background: radial-gradient(at 67% 3%,#233441 0,transparent 55%),#0c131c }
+button, select, input { font: inherit }
+button, select { cursor: pointer }
+button { border: 0; color: inherit; background: transparent }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px }
+[hidden] { display: none !important }
+.rail { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 31px 14px 20px; background: #101a23ed; border-right: 1px solid #283a44 }
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 10px; font-size: 26px; font-weight: 700; letter-spacing: -1px }
+.brand-icon { display: block; width: 27px; height: 22px; border: 2px solid #98e6ce; border-radius: 5px; transform: rotate(-8deg); position: relative }
+.brand-icon:after { content:""; position:absolute; inset:4px; background:repeating-linear-gradient(90deg,#98e6ce 0 3px,transparent 3px 5px); border-bottom:3px solid #98e6ce }
+nav { display: grid; gap: 6px; margin-top: 58px }
+nav button { text-align:left; padding: 13px 14px; display:flex; gap:13px; align-items:center; border-radius:9px; color:#b6c6ce; font-size:14px; font-weight:600 }
+nav button:hover, .secondary:hover { background:#263943 }
+nav [aria-current=page] { color:var(--mint); background:#233b3e; box-shadow: inset 3px 0 #8ce4c6 }
+.navicon { display:block; width:16px; height:16px; border:1.6px solid currentColor; flex:none }
+.light { border-radius:50%; box-shadow:inset 0 0 0 3px #203437; background:currentColor }
+.layers { height:12px; border-radius:2px; box-shadow: -3px 3px #101a23,-4px 4px currentColor }
+.port { height:12px; border-radius:3px; position:relative }
+.port:after { content:""; position:absolute; inset:3px; border-bottom:2px solid currentColor }
+.receiver { border-top:1px solid var(--line); margin-top:auto; padding:20px 9px 0 }
+.receiver strong { display:flex; gap:9px; align-items:center; font-size:13px; letter-spacing:.03em }
+.receiver small { margin-top:5px; margin-left:16px }
+#status-dot { width:7px; height:7px; border-radius:100%; background:#8b9aa5 }
+#status-dot.online { background:var(--mint); box-shadow:0 0 9px #7ed5b877 }
+main { min-width:0; width:100%; max-width:1500px; margin:0 auto; padding:29px clamp(20px,3.3vw,52px) 30px }
+header { display:flex; justify-content:space-between; align-items:center; margin-bottom:23px; gap:15px; min-height:43px }
+h1,h2,p { margin:0 }
+h1 { font-size:clamp(25px,2.6vw,37px); font-weight:650; letter-spacing:-.045em }
+h2 { font-size:20px; font-weight:630; letter-spacing:-.025em }
+.slot-label { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:9px }
+select,.secondary { border:1px solid #3a515c; background:#1d2c37; color:#e5efef; border-radius:7px; padding:7px 10px }
+.stage { isolation:isolate; position:relative; display:grid; align-items:center; justify-items:end; overflow:hidden; border:1px solid #344d55; border-radius:18px; height:clamp(238px,27vw,340px); background:radial-gradient(ellipse at 70% 30%,#33545b 0%,#203942 37%,#13232d 70%); }
+.stage:after { content:""; position:absolute; z-index:-1; inset:0; background:repeating-linear-gradient(128deg,transparent 0 18px,#c3f8f204 19px 20px) }
+.halo { position:absolute; z-index:-1; right:17%; top:35%; width:32%; height:32%; background:var(--strip-color); opacity:.23; filter:blur(51px) }
+.product { position:absolute; top:clamp(18px,2.2vw,34px); left:clamp(17px,2.4vw,36px) }
+.product span { font-size:12px; letter-spacing:.035em; color:#b6d2d3 }
+.product h2 { font-size:clamp(41px,4.8vw,71px); font-weight:610; line-height:1.13; letter-spacing:-.065em }
+.keyboard { width:72%; margin:40px 4% 0 0; padding:1.55% 1.6% 2%; border-radius:13px; background:linear-gradient(150deg,#849397,#465860 20%,#27383e 80%,#75858b); border:1px solid #97a5a9; transform:perspective(790px) rotateX(28deg) rotateZ(-8deg); box-shadow:0 3px #586a70,0 6px #3b5059,0 9px #263a42,0 24px 25px #02080ca8 }
+#keybed { display:grid; gap:3px; padding:3px; border-radius:5px; background:#18242a; container-type:inline-size }
+.key-row { display:flex; gap:3px }
+.key { display:grid; place-items:center; flex:var(--units,1) 1 0; min-width:0; height:4.55cqw; border-radius:3px; font:550 clamp(5px,.66vw,10px)/1 "Segoe UI",sans-serif; color:color-mix(in srgb,var(--key-color) 62%,#f6fcff); background:linear-gradient(170deg,#485760,#26343c); box-shadow:inset 0 1px #73828a,inset 0 -2px #17272d,0 1px 2px var(--key-color); text-shadow:0 0 3px var(--key-color) }
+.key:first-child { background:linear-gradient(160deg,#56676c,#36464b) }
+.spacer { flex:var(--units,1) 1 0 }
+.badge { flex:1.7 1 0; align-self:center; height:3px; border-radius:9px; background:var(--strip-color); box-shadow:0 0 6px var(--strip-color) }
+.key-row:first-child { margin-bottom:4px }
+.panels { display:grid; grid-template-columns:1.1fr 1fr; gap:16px; margin-top:17px }
+.card { min-width:0; border:1px solid #30434d; border-radius:14px; padding:clamp(17px,2vw,28px); background:linear-gradient(135deg,#1c2c36eb,#16232de8) }
+.card h2 { margin-bottom:13px }
+.seg { display:flex; padding:3px; gap:3px; border:1px solid #354953; border-radius:9px; background:#101d27; margin:14px 0 }
+.seg button { flex:1; padding:6px; color:#adbec7; font-size:13px; font-weight:600; border-radius:6px }
+.seg [aria-pressed=true] { color:#b0f6df; background:#2b4249 }
+.row,.slider-title { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:37px; font-size:14px }
+.colors,#palette { display:flex; align-items:center; gap:5px }
+.swatch,input[type=color] { width:21px; height:21px; border-radius:50%; padding:0; border:1px solid #69808b; background:var(--swatch); cursor:pointer }
+.swatch[aria-pressed=true] { outline:1px solid white; outline-offset:2px }
+input[type=color] { width:28px; border-radius:5px }
+input[type=color]::-webkit-color-swatch-wrapper { padding:2px }
+input[type=color]::-webkit-color-swatch { border:0; border-radius:3px }
+input[type=range] { width:100%; accent-color:var(--mint); margin:4px 0 9px; cursor:pointer }
+output,.mono,td:not(:first-child) { font-family:Consolas,monospace }
+small,.intro,.hardware p,.diag p { color:var(--muted); line-height:1.5 }
+small { display:block; font-size:12px }
+.hardware p,.diag p,.intro { font-size:14px }
+dl { margin:13px 0 }
+dl div { display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #32454d; padding:5px 0 }
+dt,dd { font-size:13px; margin:0 }
+kbd { font:12px Consolas,monospace; color:#cfdbdf }
+.primary { font-size:13px; font-weight:650; border-radius:7px; color:#10302c; background:var(--mint); padding:9px 14px }
+.primary:hover { background:#abf1dc }
+.primary span { margin-left:7px }
+#open-error:not(:empty) { margin-top:8px; color:#ffd39e }
+#profile-list { display:grid; gap:13px; margin-top:24px }
+.profile-card { display:flex; align-items:center; gap:15px; text-align:left; width:100% }
+.profile-card:hover { border-color:#7aa79c }
+.profile-card i { width:45px; height:45px; border-radius:11px; background:linear-gradient(130deg,var(--a),var(--b)) }
+.profile-card strong { display:block; font-size:18px }
+.profile-card b { margin-left:auto; color:var(--mint) }
+.diag p { margin:8px 0 17px }
+table { width:100%; border-collapse:collapse; font-size:14px }
+th,td { text-align:left; border-bottom:1px solid var(--line); padding:10px 6px }
+th { color:var(--muted); font-size:12px }
+@keyframes breathe { from{opacity:.55} to{opacity:1} }
+#keybed.pulse-keys .key,.pulse-strip .badge { animation:breathe 1.65s ease-in-out infinite alternate }
+@media(prefers-reduced-motion:reduce) { #keybed .key,#keybed .badge { animation:none } }
+@media(max-width:950px) { body { grid-template-columns:146px minmax(0,1fr) } main { padding:22px 18px } .rail { padding-inline:8px } .panels { gap:10px } .card { padding:16px } }
+@media(max-width:780px) { .panels { grid-template-columns:1fr } .stage {height:230px} .keyboard {width:79%; margin-top:52px} .product h2{font-size:34px} }

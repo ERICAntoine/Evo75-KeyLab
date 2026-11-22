@@ -8,16 +8,27 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - name: Vérifier le format
         run: cargo fmt --check
-      - name: Compiler pour Windows x64
-        run: cargo build --release
-      - name: Lancer le diagnostic
-        run: .\target\release\evo75-keylab.exe
+      - name: Compiler KeyLab
+        run: cargo build --release --bins
+      - name: Lancer le diagnostic HID
+        run: .\target\release\diagnostic.exe
+      - name: Installer le pilote de test WebView2
+        run: python -m pip install playwright==1.56.0
+      - name: Tester la fenêtre Windows
+        timeout-minutes: 4
+        run: python tests/gui.py
       - uses: actions/upload-artifact@v4
         with:
           name: evo75-keylab-windows-x64
           path: target/release/evo75-keylab.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apercu-keylab
+          path: target/keylab.png
           if-no-files-found: error

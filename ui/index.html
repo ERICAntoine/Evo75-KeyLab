@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evo75 KeyLab</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script>
+</head>
+<body>
+<aside class="rail">
+  <div class="brand"><i class="brand-icon" aria-hidden="true"></i>KeyLab</div>
+  <nav aria-label="Navigation principale">
+    <button data-page="lighting" aria-current="page"><i class="navicon light"></i>Éclairage</button>
+    <button data-page="profiles"><i class="navicon layers"></i>Profils</button>
+    <button data-page="diagnostic"><i class="navicon port"></i>Diagnostic</button>
+  </nav>
+  <div class="receiver"><strong><i id="status-dot"></i>EVO75 2.4G</strong><small id="connection" role="status">Recherche…</small></div>
+</aside>
+<main>
+  <section id="lighting">
+    <header><h1>Atelier d’éclairage</h1><label class="slot-label">Profil <select id="slot"></select></label></header>
+    <div class="stage">
+      <div class="halo"></div>
+      <div class="product"><span>Aperçu du profil</span><h2>Evo75</h2></div>
+      <div class="keyboard" aria-label="Aperçu du rétroéclairage des touches et du bandeau" role="img"><div id="keybed"></div></div>
+    </div>
+    <div class="panels">
+      <article class="card">
+        <h2>Réglages du profil</h2>
+        <div class="seg" aria-label="Zone à régler"><button data-zone="keys" aria-pressed="true">Touches</button><button data-zone="strip" aria-pressed="false">Bandeau</button></div>
+        <div class="row"><label for="effect">Effet</label><select id="effect"><option value="solid">Fixe</option><option value="pulse">Respiration</option><option value="off">Éteint</option></select></div>
+        <div class="row"><label for="color">Couleur</label><div class="colors"><div id="palette"></div><input type="color" id="color" aria-label="Couleur personnalisée"></div></div>
+        <div class="slider-title"><label for="level">Luminosité</label><output for="level" id="percent"></output></div>
+        <input type="range" id="level" min="0" max="100">
+        <small id="save-status" role="status"></small>
+      </article>
+      <article class="card hardware">
+        <h2>Sur le clavier</h2>
+        <p>Les réglages ci-contre modifient l’aperçu local. Pour régler les LED de l’Evo75, utilise ses raccourcis ou le configurateur en USB-C.</p>
+        <dl id="shortcuts"></dl>
+        <button id="official" class="primary">Ouvrir Ticktype <span aria-hidden="true">↗</span></button>
+        <small id="open-error" role="alert"></small>
+      </article>
+    </div>
+  </section>
+  <section id="profiles" hidden><header><h1>Profils locaux</h1></header>
+    <p class="intro">Chaque profil conserve une couleur, un effet et une luminosité pour chacune des deux zones.</p>
+    <div id="profile-list"></div>
+  </section>
+  <section id="diagnostic" hidden><header><h1>Diagnostic HID</h1><button class="secondary" id="scan">Actualiser</button></header>
+    <article class="card diag"><h2>Récepteur Evo75</h2><p class="mono">USB · 36B0:3002</p><p id="device-summary" role="status"></p>
+      <table hidden id="interfaces"><thead><tr><th>Produit</th><th>Interface</th><th>Page</th><th>Usage</th></tr></thead><tbody></tbody></table>
+    </article>
+  </section>
+</main>
+</body>
+</html>

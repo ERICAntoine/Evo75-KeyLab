@@ -1,19 +1,19 @@
 # Evo75-KeyLab
 
-Prototype Windows en Rust pour identifier les interfaces HID du récepteur **EVO75 2.4G** avant de développer les réglages RGB.
+Application Windows en français pour préparer les profils d’éclairage de l’Evo75 et identifier son récepteur 2,4 GHz. La fenêtre associe une interface locale Tauri à la détection HID en Rust.
 
-## Lancer le diagnostic sous Windows
+## Ouvrir l’application
 
-Dans [GitHub Actions](https://github.com/ERICAntoine/Evo75-KeyLab/actions/workflows/windows.yml), ouvre une compilation réussie et télécharge l’archive `evo75-keylab-windows-x64` dans la section **Artifacts**. Extrais le ZIP, puis double-clique sur `evo75-keylab.exe`. La fenêtre affiche le résultat ou l’erreur et attend que tu appuies sur **Entrée**. Tu peux aussi lancer le diagnostic depuis PowerShell.
+Télécharge l’archive **evo75-keylab-windows-x64** depuis une [compilation Windows réussie](https://github.com/ERICAntoine/Evo75-KeyLab/actions/workflows/windows.yml). Extrais le ZIP et double-clique sur **evo75-keylab.exe**. La fenêtre utilise le [runtime Microsoft Edge WebView2](https://developer.microsoft.com/microsoft-edge/webview2/).
 
-```powershell
-.\evo75-keylab.exe
-```
+- **Éclairage** affiche un aperçu des touches et du bandeau. Pour chaque zone, choisis une teinte, une luminosité et un effet. Les raccourcis affichés commandent les LED du clavier et le bouton **Ouvrir Ticktype** ouvre le configurateur du fabricant dans le navigateur.
+- **Profils** donne accès à Bureau, Crépuscule et Nuit. KeyLab enregistre automatiquement les modifications sur ce PC.
+- **Diagnostic** recherche le récepteur `36B0:3002` et affiche les collections HID présentes. **Actualiser** relance la recherche après un changement de connexion.
 
-Pour compiler depuis les sources, installe Rust stable avec la chaîne MSVC pour Windows, puis lance `cargo run` à la racine du dépôt.
+Les réglages de profils s’appliquent à l’aperçu. La transmission directe de ces réglages au clavier via le dongle reste à valider. Pour le réglage matériel, consulte le [manuel Evo75](https://ticktype.com/pages/product-user-manual-evo75).
 
-## Lire le résultat
+## Développement
 
-Laisse le récepteur branché. L’outil énumère les collections HID de `36B0:3002`, l’identifiant sous lequel ce récepteur a été observé. Chaque ligne affiche le nom déclaré, le numéro d’interface et les deux valeurs HID qui décrivent son usage. Plusieurs lignes peuvent appartenir au même récepteur.
+Sur Windows x64 avec Rust stable MSVC, les outils de compilation Visual Studio et WebView2, lance `cargo run` depuis le dépôt. La commande `cargo run --bin diagnostic` ouvre le diagnostic en console.
 
-La mention `QMK Raw HID` signale la paire d’usage par défaut `FF60:0061`. C’est une piste pour tester VIA. Les commandes RGB acceptées en 2,4 GHz restent à établir. Cette version effectue uniquement une énumération et peut aussi être lancée sur un PC sans récepteur. [Documentation QMK Raw HID](https://docs.qmk.fm/features/rawhid)
+La compilation Windows exécute le diagnostic puis teste la fenêtre, la navigation entre les trois vues et la persistance des profils. La capture de l’interface est disponible dans l’archive **apercu-keylab** du même workflow.
