@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -13,19 +14,24 @@ def exercise():
     endpoint = "http://127.0.0.1:9222"
     env = dict(os.environ, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS="--remote-debugging-port=9222")
     exe = Path("target/release/evo75-keylab.exe").resolve()
+    env["WEBVIEW2_USER_DATA_FOLDER"] = tempfile.mkdtemp(prefix="keylab-webview-")
+    local_http = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     with subprocess.Popen([str(exe)], env=env) as app:
         try:
-            for _ in range(120):
+            for _ in range(50):
                 if app.poll() is not None:
                     raise RuntimeError(f"La fenêtre s’est fermée (code {app.returncode})")
                 try:
-                    with urllib.request.urlopen(endpoint + "/json/list", timeout=1) as response:
+                    with local_http.open(endpoint + "/json/list", timeout=1) as response:
                         if b'"page"' in response.read():
                             break
                 except (OSError, urllib.error.URLError):
                     pass
                 time.sleep(0.5)
             else:
+                subprocess.run(["powershell", "-NoProfile", "-Command",
+                                "Get-Process evo75-keylab,msedgewebview2 -ErrorAction SilentlyContinue | "
+                                "Select-Object ProcessName,MainWindowTitle,Responding | Format-Table"])
                 raise RuntimeError("Aucune fenêtre WebView2 détectée")
 
             with sync_playwright() as driver:

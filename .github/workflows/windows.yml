@@ -17,16 +17,33 @@ jobs:
         run: cargo build --release --bins
       - name: Lancer le diagnostic HID
         run: .\target\release\diagnostic.exe
-      - name: Installer le pilote de test WebView2
-        run: python -m pip install playwright==1.56.0
-      - name: Tester la fenêtre Windows
-        timeout-minutes: 4
-        run: python tests/gui.py
       - uses: actions/upload-artifact@v4
         with:
           name: evo75-keylab-windows-x64
           path: target/release/evo75-keylab.exe
           if-no-files-found: error
+      - name: Vérifier le runtime WebView2 de la machine de test
+        shell: pwsh
+        run: |
+          $paths = @("${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application", "$env:LOCALAPPDATA\Microsoft\EdgeWebView\Application")
+          function Find-WebViewRuntime {
+            Get-ChildItem -Path $paths -Filter msedgewebview2.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if (-not (Find-WebViewRuntime)) {
+            $installer = Join-Path $env:RUNNER_TEMP MicrosoftEdgeWebview2Setup.exe
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $installer
+            $setup = Start-Process $installer -ArgumentList '/silent','/install' -WindowStyle Hidden -Wait -PassThru
+            Write-Output "Installation WebView2 : $($setup.ExitCode)"
+          }
+          $runtime = Find-WebViewRuntime
+          if (-not $runtime) { throw 'Runtime WebView2 introuvable.' }
+          Write-Output "Runtime de test : $($runtime.VersionInfo.ProductVersion)"
+          "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER=$($runtime.Directory.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Installer le pilote de test WebView2
+        run: python -m pip install playwright==1.56.0
+      - name: Tester la fenêtre Windows
+        timeout-minutes: 4
+        run: python tests/gui.py
       - uses: actions/upload-artifact@v4
         with:
           name: apercu-keylab
