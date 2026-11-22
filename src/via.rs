@@ -8,19 +8,35 @@ const SET: u8 = 7;
 const MATRIX: u8 = 3;
 const COLOR: u8 = 4;
 
-fn exchange(device: &HidDevice, command: &[u8]) -> Result<[u8; 32], String> {
+#[derive(Clone, Copy)]
+enum Output {
+    Interrupt,
+    Control,
+}
+
+fn exchange(device: &HidDevice, output: Output, command: &[u8]) -> Result<[u8; 32], String> {
     let mut packet = [0; 33];
     packet[1..1 + command.len()].copy_from_slice(command);
-    let written = device.write(&packet).map_err(|e| e.to_string())?;
-    if written != packet.len() {
-        return Err("Écriture HID incomplète.".into());
+    let id = command[0];
+    match output {
+        Output::Interrupt => {
+            let written = device
+                .write(&packet)
+                .map_err(|e| format!("Envoi interrupt 0x{id:02X} : {e}"))?;
+            if written != packet.len() {
+                return Err(format!("Envoi interrupt 0x{id:02X} incomplet."));
+            }
+        }
+        Output::Control => device
+            .send_output_report(&packet)
+            .map_err(|e| format!("Envoi contrôle 0x{id:02X} : {e}"))?,
     }
     let mut reply = [0; 32];
     let count = device
         .read_timeout(&mut reply, 1500)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("Lecture après 0x{id:02X} : {e}"))?;
     if count == 0 {
-        return Err("Aucune réponse sous 1,5 s. Réveille le clavier et réessaie.".into());
+        return Err(format!("Aucune réponse à 0x{id:02X} sous 1,5 s."));
     }
     let header_len = if command[0] == GET_VERSION { 1 } else { 3 };
     if count != reply.len() || reply[..header_len] != command[..header_len] {
@@ -32,10 +48,10 @@ fn exchange(device: &HidDevice, command: &[u8]) -> Result<[u8; 32], String> {
     Ok(reply)
 }
 
-fn read_color(device: &HidDevice) -> Result<[u8; 2], String> {
+fn read_color(device: &HidDevice, output: Output) -> Result<[u8; 2], String> {
     // Two different padding values distinguish returned data from a request echo.
-    let first = exchange(device, &[GET, MATRIX, COLOR, 0, 0])?;
-    let second = exchange(device, &[GET, MATRIX, COLOR, 255, 255])?;
+    let first = exchange(device, output, &[GET, MATRIX, COLOR, 0, 0])?;
+    let second = exchange(device, output, &[GET, MATRIX, COLOR, 255, 255])?;
     if first[3..5] != second[3..5] {
         return Err("Lecture de teinte non confirmée par le récepteur.".into());
     }
@@ -58,18 +74,32 @@ pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
     if matching.next().is_some() {
         return Err("Plusieurs récepteurs Evo75 détectés.".into());
     }
-    let device = info.open_device(&api).map_err(|e| e.to_string())?;
-    let answer = exchange(&device, &[GET_VERSION])?;
+    let open = || {
+        info.open_device(&api)
+            .map_err(|e| format!("Ouverture HID : {e}"))
+    };
+    let device = open()?;
+    let (device, output, answer) = match exchange(&device, Output::Interrupt, &[GET_VERSION]) {
+        Ok(answer) => (device, Output::Interrupt, answer),
+        Err(first) => {
+            drop(device);
+            let device = open()?;
+            let answer = exchange(&device, Output::Control, &[GET_VERSION]).map_err(|second| {
+                format!("Essai interrupt : {first} · Essai contrôle : {second}")
+            })?;
+            (device, Output::Control, answer)
+        }
+    };
     let version = u16::from_be_bytes([answer[1], answer[2]]);
     if !(11..=13).contains(&version) {
         return Err(format!(
             "Version reçue : 0x{version:04X}. Commandes couleur non activées."
         ));
     }
-    let current = read_color(&device).map_err(|e| format!("VIA {version} répond. {e}"))?;
+    let current = read_color(&device, output).map_err(|e| format!("VIA {version} répond. {e}"))?;
     if let Some([hue, sat]) = color {
-        exchange(&device, &[SET, MATRIX, COLOR, hue, sat])?;
-        if read_color(&device)? != [hue, sat] {
+        exchange(&device, output, &[SET, MATRIX, COLOR, hue, sat])?;
+        if read_color(&device, output)? != [hue, sat] {
             return Err("Commande envoyée, mais la relecture de la teinte diffère.".into());
         }
         Ok(format!("VIA {version} · Teinte confirmée par relecture."))

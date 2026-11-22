@@ -1,6 +1,6 @@
 {
   "productName": "Evo75 KeyLab",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "identifier": "io.github.ericantoine.evo75keylab",
   "build": {
     "frontendDist": "ui"
