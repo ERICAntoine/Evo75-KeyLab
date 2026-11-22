@@ -10,7 +10,7 @@ Télécharge l’archive **evo75-keylab-windows-x64** depuis une [compilation Wi
 - **Profils** donne accès à Bureau, Crépuscule et Nuit. KeyLab enregistre automatiquement les modifications sur ce PC.
 - **Diagnostic** recherche le récepteur `36B0:3002` et affiche les collections HID présentes. **Actualiser** relance la recherche après un changement de connexion.
 
-Les réglages de profils s’appliquent à l’aperçu. La transmission directe de ces réglages au clavier via le dongle reste à valider. Pour le réglage matériel, consulte le [manuel Evo75](https://ticktype.com/pages/product-user-manual-evo75).
+Dans **Sur le clavier**, **Tester VIA** interroge la version du protocole puis lit la couleur du canal RGB Matrix standard. Si ces lectures aboutissent, **Envoyer la teinte des touches** écrit la teinte et la saturation et les relit. Le bandeau, la luminosité et les effets restent locaux. Pour le réglage matériel, consulte le [manuel Evo75](https://ticktype.com/pages/product-user-manual-evo75).
 
 ## Développement
 

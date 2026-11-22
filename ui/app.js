@@ -206,3 +206,31 @@ $("#official").onclick = async () => {
 };
 renderEditor();
 scan();
+
+let viaReady = false;
+async function queryVia(apply) {
+  const probe = $("#probe");
+  const send = $("#apply-color");
+  probe.disabled = send.disabled = true;
+  $("#via-result").textContent = "Échange avec le récepteur…";
+  try {
+    let color = null;
+    if (apply) {
+      const rgb = profiles[slot].keys.color.slice(1).match(/../g).map(v => parseInt(v, 16));
+      const [r,g,b] = rgb, max = Math.max(...rgb), delta = max - Math.min(...rgb);
+      let h = 0;
+      if (delta) h = max === r ? (g-b)/delta : max === g ? 2+(b-r)/delta : 4+(r-g)/delta;
+      color = [Math.round(((h+6)%6)/6*255), max ? Math.round(delta/max*255) : 0];
+    }
+    $("#via-result").textContent = await window.__TAURI__.core.invoke("query_via", {color});
+    viaReady = true;
+  } catch (error) {
+    viaReady = false;
+    $("#via-result").textContent = String(error);
+  } finally {
+    probe.disabled = false;
+    send.disabled = !viaReady;
+  }
+}
+$("#probe").onclick = () => queryVia(false);
+$("#apply-color").onclick = () => queryVia(true);

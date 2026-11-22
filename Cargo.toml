@@ -1,6 +1,6 @@
 [package]
 name = "evo75-keylab"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 default-run = "evo75-keylab"
 license = "MIT"
