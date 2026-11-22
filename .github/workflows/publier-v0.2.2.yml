@@ -1,0 +1,42 @@
+name: Publier KeyLab v0.2.2
+on:
+  push:
+    branches: [publication/v0.2.2]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ERICAntoine/Evo75-KeyLab
+    steps:
+      - name: Publier les fichiers Windows validés
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=4bdf0ad5e995e78378f8c50619a5676dd5cfc600
+          run=45061884619
+          test "$(gh run view "$run" --json headSha --jq .headSha)" = "$sha"
+          test "$(gh run view "$run" --json conclusion --jq .conclusion)" = success
+          gh run download "$run" -n evo75-keylab-windows-x64 -D dist
+          gh run download "$run" -n apercu-keylab -D dist
+          cd dist
+          sha256sum evo75-keylab.exe > SHA256SUMS.txt
+          cat > "$RUNNER_TEMP/release.md" <<'NOTES'
+          ## Ouvrir KeyLab
+          
+          Téléchargez **evo75-keylab.exe** ci-dessous et double-cliquez dessus sous Windows x64. La fenêtre utilise Microsoft Edge WebView2. Le fichier **keylab.png** montre l’interface.
+          
+          ## Dans cette version
+          
+          Cette version essaie deux modes d’envoi HID lors du test de version. Si la première lecture échoue, KeyLab rouvre le récepteur et envoie la requête de version via un rapport de sortie sur le canal de contrôle. Les écritures de couleur ne sont pas répétées automatiquement.
+          
+          Dans **Éclairage → Sur le clavier**, utilisez **Tester VIA** avec le récepteur Evo75 branché. Le test lit la version VIA puis la teinte et la saturation du canal RGB Matrix standard. Une fois la lecture réussie, **Envoyer la teinte des touches** transmet la couleur sélectionnée pour les touches et vérifie sa relecture. Un effet fixe permet de voir le changement.
+          
+          La compatibilité physique dépend du firmware du récepteur. Le bandeau, les effets et la luminosité des profils restent en aperçu local.
+          
+          [Compilation et tests Windows](https://github.com/ERICAntoine/Evo75-KeyLab/actions/runs/45061884619)
+          NOTES
+          gh release create v0.2.2 --target "$sha" --title "Evo75 KeyLab v0.2.2" --notes-file "$RUNNER_TEMP/release.md" evo75-keylab.exe keylab.png SHA256SUMS.txt
