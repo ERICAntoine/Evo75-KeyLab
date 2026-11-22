@@ -147,9 +147,10 @@ pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
         Err(first) => {
             drop(device);
             let device = open()?;
-            let answer = exchange(&device, Output::Control, ids, &[GET_VERSION]).map_err(|second| {
-                format!("{summary} · Essai interrupt : {first} · Essai contrôle : {second}")
-            })?;
+            let answer =
+                exchange(&device, Output::Control, ids, &[GET_VERSION]).map_err(|second| {
+                    format!("{summary} · Essai interrupt : {first} · Essai contrôle : {second}")
+                })?;
             (device, Output::Control, answer)
         }
     };
@@ -159,7 +160,8 @@ pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
             "Version reçue : 0x{version:04X}. Commandes couleur non activées."
         ));
     }
-    let current = read_color(&device, output, ids).map_err(|e| format!("VIA {version} répond. {e}"))?;
+    let current =
+        read_color(&device, output, ids).map_err(|e| format!("VIA {version} répond. {e}"))?;
     if let Some([hue, sat]) = color {
         exchange(&device, output, ids, &[SET, MATRIX, COLOR, hue, sat])?;
         if read_color(&device, output, ids)? != [hue, sat] {
