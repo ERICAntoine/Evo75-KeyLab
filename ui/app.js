@@ -157,18 +157,18 @@ async function scan() {
   $("#connection").textContent = "Recherche…";
   try {
     const rows = await window.__TAURI__.core.invoke("scan");
-    $("#connection").textContent = rows.length ? "Récepteur détecté" : "Récepteur absent";
+    $("#connection").textContent = rows.length ? [...new Set(rows.map(row => row.connection))].join(" · ") : "Evo75 absent";
     $("#status-dot").classList.toggle("online", rows.length > 0);
     $("#interfaces").hidden = rows.length === 0;
     const qmk = rows.some(row => row.usage_page === 0xff60 && row.usage === 0x61);
     $("#device-summary").textContent = rows.length
       ? rows.length + " collection(s) HID. " + (qmk ? "Usage QMK Raw HID détecté." : "Usage QMK Raw HID par défaut absent.")
-      : "Aucun récepteur 2,4 GHz détecté. Branche le dongle Evo75, puis clique sur Actualiser.";
+      : "Aucun Evo75 détecté. Branche le clavier en USB ou connecte le récepteur 2,4 GHz, puis clique sur Actualiser.";
     const body = $("#interfaces tbody");
     body.replaceChildren();
     for (const row of rows) {
       const tr = body.insertRow();
-      for (const value of [row.product,row.interface,hex(row.usage_page),hex(row.usage)]) tr.insertCell().textContent = value;
+      for (const value of [row.product,row.connection,hex(row.product_id),row.interface,hex(row.usage_page),hex(row.usage)]) tr.insertCell().textContent = value;
     }
   } catch (error) {
     $("#status-dot").classList.remove("online");
@@ -207,12 +207,11 @@ $("#official").onclick = async () => {
 renderEditor();
 scan();
 
-let viaReady = false;
 async function queryVia(apply) {
   const probe = $("#probe");
   const send = $("#apply-color");
   probe.disabled = send.disabled = true;
-  $("#via-result").textContent = "Échange avec le récepteur…";
+  $("#via-result").textContent = "Échange avec le clavier…";
   try {
     let color = null;
     if (apply) {
@@ -223,13 +222,10 @@ async function queryVia(apply) {
       color = [Math.round(((h+6)%6)/6*255), max ? Math.round(delta/max*255) : 0];
     }
     $("#via-result").textContent = await window.__TAURI__.core.invoke("query_via", {color});
-    viaReady = true;
   } catch (error) {
-    viaReady = false;
     $("#via-result").textContent = String(error);
   } finally {
-    probe.disabled = false;
-    send.disabled = !viaReady;
+    probe.disabled = send.disabled = false;
   }
 }
 $("#probe").onclick = () => queryVia(false);

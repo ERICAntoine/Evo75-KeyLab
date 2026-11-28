@@ -1,3 +1,4 @@
+use evo75_keylab::evo75_connection;
 use hidapi::{HidApi, HidDevice};
 use hidparser::{Report, parse_report_descriptor};
 use std::sync::Mutex;
@@ -94,7 +95,7 @@ fn exchange(
     if count == 0 {
         return Err(format!("Aucune réponse à 0x{id:02X} sous 1,5 s."));
     }
-    let offset = usize::from(ids.input != 0);
+    let offset = usize::from(ids.input != 0 || (count == 33 && raw[0] == 0));
     if count != 32 + offset || (offset == 1 && raw[0] != ids.input) {
         return Err(format!("Rapport entrant inattendu ({count} octets)."));
     }
@@ -123,19 +124,28 @@ fn read_color(device: &HidDevice, output: Output, ids: ReportIds) -> Result<[u8;
 pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
     let _guard = TRANSACTION.lock().map_err(|e| e.to_string())?;
     let api = HidApi::new().map_err(|e| e.to_string())?;
-    let mut matching = api.device_list().filter(|d| {
-        (
-            d.vendor_id(),
-            d.product_id(),
-            d.interface_number(),
-            d.usage_page(),
-            d.usage(),
-        ) == (0x36b0, 0x3002, 1, 0xff60, 0x61)
-    });
-    let info = matching.next().ok_or("Interface Raw HID Evo75 absente.")?;
-    if matching.next().is_some() {
-        return Err("Plusieurs récepteurs Evo75 détectés.".into());
+    let mut usb = Vec::new();
+    let mut receivers = Vec::new();
+    for device in api.device_list() {
+        if (device.usage_page(), device.usage()) != (0xff60, 0x61) {
+            continue;
+        }
+        match evo75_connection(device) {
+            Some("USB") => usb.push(device),
+            Some("2,4 GHz") if device.interface_number() == 1 => receivers.push(device),
+            _ => {}
+        }
     }
+    let (devices, connection) = if usb.is_empty() {
+        (receivers, "2,4 GHz")
+    } else {
+        (usb, "USB")
+    };
+    let info = match devices.as_slice() {
+        [info] => *info,
+        [] => return Err("Interface VIA Evo75 introuvable. Branche le clavier en mode USB.".into()),
+        _ => return Err(format!("Plusieurs interfaces VIA Evo75 en {connection}.")),
+    };
     let open = || {
         info.open_device(&api)
             .map_err(|e| format!("Ouverture HID : {e}"))
@@ -167,10 +177,12 @@ pub fn communicate(color: Option<[u8; 2]>) -> Result<String, String> {
         if read_color(&device, output, ids)? != [hue, sat] {
             return Err("Commande envoyée, mais la relecture de la teinte diffère.".into());
         }
-        Ok(format!("VIA {version} · Teinte confirmée par relecture."))
+        Ok(format!(
+            "{connection} · VIA {version} · Couleur confirmée par relecture."
+        ))
     } else {
         Ok(format!(
-            "VIA {version} · Teinte {} et saturation {} lues sur le clavier.",
+            "{connection} · VIA {version} · Teinte {} et saturation {} lues sur le clavier.",
             current[0], current[1]
         ))
     }

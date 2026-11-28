@@ -1,6 +1,6 @@
 # Evo75-KeyLab
 
-Application Windows en français pour préparer les profils d’éclairage de l’Evo75 et identifier son récepteur 2,4 GHz. La fenêtre associe une interface locale Tauri à la détection HID en Rust.
+Application Windows en français pour préparer les profils d’éclairage de l’Evo75 et détecter le clavier en USB ou son récepteur 2,4 GHz. La fenêtre associe une interface locale Tauri à la détection HID en Rust.
 
 ## Ouvrir l’application
 
@@ -8,9 +8,9 @@ Télécharge l’archive **evo75-keylab-windows-x64** depuis une [compilation Wi
 
 - **Éclairage** affiche un aperçu des touches et du bandeau. Pour chaque zone, choisis une teinte, une luminosité et un effet. Les raccourcis affichés commandent les LED du clavier et le bouton **Ouvrir Ticktype** ouvre le configurateur du fabricant dans le navigateur.
 - **Profils** donne accès à Bureau, Crépuscule et Nuit. KeyLab enregistre automatiquement les modifications sur ce PC.
-- **Diagnostic** recherche le récepteur `36B0:3002` et affiche les collections HID présentes. **Actualiser** relance la recherche après un changement de connexion.
+- **Diagnostic** recherche l’Evo75 en USB et son récepteur `36B0:3002` et affiche les collections HID présentes. **Actualiser** relance la recherche après un changement de connexion.
 
-Dans **Sur le clavier**, **Tester VIA** interroge la version du protocole puis lit la couleur du canal RGB Matrix standard. Si ces lectures aboutissent, **Envoyer la teinte des touches** écrit la teinte et la saturation et les relit. Le bandeau, la luminosité et les effets restent locaux. Pour le réglage matériel, consulte le [manuel Evo75](https://ticktype.com/pages/product-user-manual-evo75).
+Branche le clavier en USB et passe-le en mode filaire. Dans **Éclairage**, choisis une couleur dans **Touches**, puis clique sur **Appliquer la couleur des touches**. KeyLab vérifie la liaison VIA et relit la couleur sur le canal RGB Matrix après l’envoi. **Tester VIA** permet de vérifier la liaison seule. KeyLab privilégie l’USB quand le clavier et le récepteur sont présents. Pour voir la couleur, active un effet fixe sur le clavier. Pour le réglage matériel, consulte le [manuel Evo75](https://ticktype.com/pages/product-user-manual-evo75).
 
 ## Développement
 
