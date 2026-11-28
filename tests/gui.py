@@ -21,11 +21,23 @@ def check_editor():
     with sync_playwright() as driver:
         browser = driver.chromium.launch(channel="msedge")
         page = browser.new_page(viewport={"width": 1160, "height": 815})
-        page.add_init_script("window.__TAURI__ = {core: {invoke: async () => []}}")
+        page.add_init_script("""
+            window.__TAURI__ = {core: {invoke: async (command, args) => {
+                if (command === "query_via") {
+                    window.appliedColor = args.color;
+                    return "Couleur confirmée";
+                }
+                return [];
+            }}};
+        """)
         page.goto(Path("ui/index.html").resolve().as_uri())
         expect(page.get_by_role("heading", name="Atelier d’éclairage")).to_be_visible()
-        expect(page.locator("#connection")).to_have_text("Récepteur absent")
+        expect(page.locator("#connection")).to_have_text("Evo75 absent")
         page.screenshot(path="target/keylab.png")
+        page.locator("#color").fill("#ff0000")
+        page.get_by_role("button", name="Appliquer la couleur des touches").click()
+        expect(page.locator("#via-result")).to_have_text("Couleur confirmée")
+        assert page.evaluate("window.appliedColor") == [0, 255]
         page.get_by_role("button", name="Bandeau", exact=True).click()
         page.get_by_role("button", name="Pêche", exact=True).click()
         page.locator("#effect").select_option("pulse")
@@ -40,7 +52,7 @@ def check_editor():
         expect(page.locator("#level")).to_be_disabled()
         page.get_by_role("button", name="Diagnostic", exact=True).click()
         page.get_by_role("button", name="Actualiser").click()
-        expect(page.locator("#device-summary")).to_contain_text("Aucun récepteur")
+        expect(page.locator("#device-summary")).to_contain_text("Aucun Evo75")
 
 
 if __name__ == "__main__":

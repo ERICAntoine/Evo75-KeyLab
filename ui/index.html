@@ -12,7 +12,7 @@
     <button data-page="profiles"><i class="navicon layers"></i>Profils</button>
     <button data-page="diagnostic"><i class="navicon port"></i>Diagnostic</button>
   </nav>
-  <div class="receiver"><strong><i id="status-dot"></i>EVO75 2.4G</strong><small id="connection" role="status">Recherche…</small></div>
+  <div class="receiver"><strong><i id="status-dot"></i>Evo75</strong><small id="connection" role="status">Recherche…</small></div>
 </aside>
 <main>
   <section id="lighting">
@@ -34,8 +34,8 @@
       </article>
       <article class="card hardware">
         <h2>Sur le clavier</h2>
-        <p>Teste la liaison VIA, puis envoie la teinte du profil aux touches. Choisis un effet fixe sur le clavier pour voir la couleur. Le bandeau, l’effet et la luminosité restent réglables par raccourci.</p>
-        <button id="probe" class="secondary">Tester VIA</button> <button id="apply-color" class="primary" disabled>Envoyer la teinte des touches</button><p id="via-result" role="status"></p><dl id="shortcuts"></dl>
+        <p>Choisis une couleur dans Touches, puis applique-la au clavier. Pour voir la couleur, sélectionne un effet fixe sur le clavier. Le bandeau, l’effet et la luminosité se règlent avec les raccourcis ci-dessous.</p>
+        <button id="probe" class="secondary">Tester VIA</button> <button id="apply-color" class="primary">Appliquer la couleur des touches</button><p id="via-result" role="status"></p><dl id="shortcuts"></dl>
         <button id="official" class="primary">Ouvrir Ticktype <span aria-hidden="true">↗</span></button>
         <small id="open-error" role="alert"></small>
       </article>
@@ -46,8 +46,8 @@
     <div id="profile-list"></div>
   </section>
   <section id="diagnostic" hidden><header><h1>Diagnostic HID</h1><button class="secondary" id="scan">Actualiser</button></header>
-    <article class="card diag"><h2>Récepteur Evo75</h2><p class="mono">USB · 36B0:3002</p><p id="device-summary" role="status"></p>
-      <table hidden id="interfaces"><thead><tr><th>Produit</th><th>Interface</th><th>Page</th><th>Usage</th></tr></thead><tbody></tbody></table>
+    <article class="card diag"><h2>Connexions Evo75</h2><p id="device-summary" role="status"></p>
+      <table hidden id="interfaces"><thead><tr><th>Produit</th><th>Connexion</th><th>ID produit</th><th>Interface</th><th>Page</th><th>Usage</th></tr></thead><tbody></tbody></table>
     </article>
   </section>
 </main>
